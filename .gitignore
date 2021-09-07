@@ -1,6 +1,13 @@
 # java
 *.class
 
+# C C++
+*.out
+*.dSYM/
+
 # idea files
-.idea
+.idea/
 *.iml
+
+# vscode
+.vscode/
