@@ -1,63 +1,68 @@
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 using namespace std;
+
 class Solution {
-public:
-    vector<string> fullJustify(vector<string>& words, int maxWidth) {
-        // todo: need boundary guard
-        auto ans = vector<string>{};
-        for(size_t i = 0;;){
+    // blank 返回长度为 n 的由空格组成的字符串
+    string blank(int n) {
+        return string(n, ' ');
+    }
 
-            /// step 1: find max words 
-            size_t j = i; // find line end word
-            int reserved_pedding = maxWidth - words[j].size(); // basic pedding (1 space)
-            for(auto next = j+1; next < words.size(); ++next){
-                auto next_with = words[next].size()+1;
-                if(reserved_pedding < next_with)
-                    break;
-                reserved_pedding -= next_with;
-                j = next;
-            }
-
-            /// step 2: pedding
-            if (j >= words.size()-1 or j == i){
-                // last line
-                auto s = string{words[i++]};
-                while(i<=j){
-                    s.append(" ");
-                    s.append(words[i]);
-                    ++i;
-                }
-                s.append(string(reserved_pedding, ' '));
-                ans.push_back(s);
-                if(j >= words.size()-1)
-                    break;
-                else
-                    continue;
-            }
-
-            auto basic_ped = reserved_pedding/(j-i) + 1;  // common ped 
-            auto extra_ped_num = reserved_pedding%(j-i);  // numbers of common ped + 1
-            auto s = string{words[i]};
-            for(int n = 0; n<j-i ; ++n){
-                s.append(string((n < extra_ped_num) ? basic_ped+1 : basic_ped, ' '));
-                s.append(words[i+1+n]);
-            }
-            ans.push_back(s);
-            i = j+1;
+    // join 返回用 sep 拼接 [left, right) 范围内的 words 组成的字符串
+    string join(vector<string> &words, int left, int right, string sep) {
+        string s = words[left];
+        for (int i = left + 1; i < right; ++i) {
+            s += sep + words[i];
         }
+        return s;
+    }
 
-        return ans;
+public:
+    vector<string> fullJustify(vector<string> &words, int maxWidth) {
+        vector<string> ans;
+        int right = 0, n = words.size();
+        while (true) {
+            int left = right; // 当前行的第一个单词在 words 的位置
+            int sumLen = 0; // 统计这一行单词长度之和
+            // 循环确定当前行可以放多少单词，注意单词之间应至少有一个空格
+            while (right < n && sumLen + words[right].length() + right - left <= maxWidth) {
+                sumLen += words[right++].length();
+            }
+
+            // 当前行是最后一行：单词左对齐，且单词之间应只有一个空格，在行末填充剩余空格
+            if (right == n) {
+                string s = join(words, left, n, " ");
+                ans.emplace_back(s + blank(maxWidth - s.length()));
+                return ans;
+            }
+
+            int numWords = right - left;
+            int numSpaces = maxWidth - sumLen;
+
+            // 当前行只有一个单词：该单词左对齐，在行末填充剩余空格
+            if (numWords == 1) {
+                ans.emplace_back(words[left] + blank(numSpaces));
+                continue;
+            }
+
+            // 当前行不只一个单词
+            int avgSpaces = numSpaces / (numWords - 1);
+            int extraSpaces = numSpaces % (numWords - 1);
+            string s1 = join(words, left, left + extraSpaces + 1, blank(avgSpaces + 1)); // 拼接额外加一个空格的单词
+            string s2 = join(words, left + extraSpaces + 1, right, blank(avgSpaces)); // 拼接其余单词
+            ans.emplace_back(s1 + blank(avgSpaces) + s2);
+        }
     }
 };
 
-int main(){
-    vector<string> words {"This", "is", "an", "example", "of", "text", "justification."};
-    int maxWidth {16};
-    Solution s {};
-    auto ans = s.fullJustify(words, maxWidth);
-    for(auto &s : ans){
-        cout<< s << '\n';
-    }
+int main() {
+  vector<string> words{"This",          "is", "an", "example", "of", "text",
+                       "justification."};
+  int maxWidth{16};
+  Solution s{};
+  auto ans = s.fullJustify(words, maxWidth);
+  for (auto &s : ans) {
+    cout << s << '\n';
+  }
 }
